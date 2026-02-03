@@ -28,12 +28,12 @@
 
         .navbar {
             backdrop-filter: blur(15px);
-            background: rgba(5, 5, 5, 0.8);
+            background: rgba(5, 5, 5, 0.8) !important;
             border-bottom: 1px solid var(--border);
         }
 
         .hero {
-            padding: 160px 0 100px;
+            padding: 140px 0 80px;
             background: radial-gradient(circle at 90% 10%, rgba(13, 110, 253, 0.15), transparent);
         }
 
@@ -84,6 +84,19 @@
             background: var(--primary);
         }
 
+        /* Adjustments for mobile buttons */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: rgba(5, 5, 5, 0.95);
+                margin-top: 15px;
+                padding: 20px;
+                border-radius: 15px;
+                border: 1px solid var(--border);
+            }
+            .nav-item { margin-bottom: 10px; width: 100%; }
+            .btn-outline-light, .btn-primary { width: 100%; display: block; margin-left: 0 !important; }
+        }
+
         .btn-primary { border-radius: 50px; font-weight: 600; padding: 12px 30px; text-decoration: none; }
         .btn-outline-light { border-radius: 50px; padding: 12px 30px; text-decoration: none; display: inline-block; }
     </style>
@@ -93,8 +106,13 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="#">G.CHAGAS <span class="text-primary">_</span></a>
-            <div class="collapse navbar-collapse justify-content-end">
-                <ul class="navbar-nav align-items-center">
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="#trajectory">Trajectory</a></li>
                     <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
                     <li class="nav-item">
@@ -114,11 +132,11 @@
 
     <header class="hero text-center">
         <div class="container">
-            <h1 class="display-2 fw-800 mb-3">Guilherme Lima das Chagas</h1>
+            <h1 class="display-3 fw-800 mb-3">Guilherme Lima das Chagas</h1>
             <p class="h4 text-primary mb-4">Software Engineer | Backend Specialist</p>
             <p class="lead text-dim mx-auto mb-5" style="max-width: 800px;">
                 Results-oriented Software Engineer with a solid background in backend development using C# and SQL. 
-                Experienced in maintaining business-critical systems (POS/CRM) and pursuing a degree in Computer Engineering at <b>Fundação Santo André</b>.
+                Expertise in maintaining business-critical systems (POS/CRM) and pursuing a degree in Computer Engineering at <b>Fundação Santo André</b>.
             </p>
             <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
                 <span class="skill-badge">C# / .NET</span>
@@ -134,7 +152,7 @@
 
     <section id="trajectory" class="py-5">
         <div class="container">
-            <h2 class="display-5 fw-bold mb-5 text-center">Career Journey</h2>
+            <h2 class="display-5 fw-bold mb-5 text-center">Career Trajectory</h2>
             <div class="row">
                 <div class="col-lg-7">
                     <div class="trajectory-item">
@@ -145,7 +163,7 @@
                     <div class="trajectory-item">
                         <h4 class="fw-bold">B.S. in Computer Engineering</h4>
                         <p class="text-primary mb-1">Fundação Santo André (FSA) | Expected Jan 2027</p>
-                        <p class="text-dim">Academic focus on robust and scalable engineering solutions, distributed systems, and advanced hardware-software integration.</p>
+                        <p class="text-dim">Academic focus on engineering scalable solutions, hardware-software integration, and advanced algorithms.</p>
                     </div>
                     <div class="trajectory-item">
                         <h4 class="fw-bold">High School Diploma</h4>
@@ -169,7 +187,7 @@
 
     <section id="projects" class="py-5">
         <div class="container">
-            <h2 class="display-5 fw-bold mb-5 text-center">Core Projects</h2>
+            <h2 class="display-5 fw-bold mb-5 text-center">Project Portfolio</h2>
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="glass-card">
@@ -209,14 +227,14 @@
                 <div class="col-md-4">
                     <div class="glass-card">
                         <h5 class="fw-bold mb-3">Financial Back-office</h5>
-                        <p class="small text-dim">Full-featured financial management software tailored for large-scale recreational camps, managing registrations, payments, and fiscal reporting.</p>
+                        <p class="small text-dim">Full-featured management software tailored for recreational activities and camps, managing registrations, payments, and fiscal reporting.</p>
                         <span class="badge bg-primary rounded-pill small">C# & SQL Server</span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card">
                         <h5 class="fw-bold mb-3">MYDAILY</h5>
-                        <p class="small text-dim">A custom productivity tool built for the Datamaxi ecosystem to streamline Scrum ceremonies, including daily stand-ups and progress tracking.</p>
+                        <p class="small text-dim">A productivity facilitator built for the Datamaxi ecosystem to streamline Scrum ceremonies and daily progress tracking.</p>
                         <span class="badge bg-primary rounded-pill small">C# & Scrum</span>
                     </div>
                 </div>
@@ -230,7 +248,7 @@
                 <div class="col-md-4">
                     <div class="glass-card">
                         <h5 class="fw-bold mb-3">Sust.ai</h5>
-                        <p class="small text-dim">Sustainability-focused software solutions developed for the Mauá challenge, aiming to optimize resource usage via intelligent algorithms.</p>
+                        <p class="small text-dim">Software solutions developed for the Mauá Sustainability challenge, focusing on resource optimization and green technology.</p>
                         <span class="badge bg-primary rounded-pill small">Sustainability Tech</span>
                     </div>
                 </div>
@@ -239,7 +257,7 @@
     </section>
 
     <footer class="py-5 text-center border-top border-secondary border-opacity-10 mt-5">
-        <p class="text-dim">Guilherme Chagas | +55 (11) 99912-3009| gui.lima3009@gmail.com</p>
+        <p class="text-dim">Guilherme Chagas | +55 11 99912-3309 | gui.lima3009@gmail.com</p>
         <div class="d-flex justify-content-center gap-3 mt-3">
             <a href="https://github.com/6uigol" target="_blank" class="text-white fs-4"><i class="bi bi-github"></i></a>
             <a href="https://linkedin.com/in/guilherme-lima-das-chagas-38a6a4230" target="_blank" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
