@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guilherme Chagas | Software Engineer</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --bg: #050505;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            backdrop-filter: blur(15px);
+            background: rgba(5, 5, 5, 0.8);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero {
+            padding: 160px 0 100px;
+            background: radial-gradient(circle at 90% 10%, rgba(13, 110, 253, 0.15), transparent);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+            transition: all 0.4s ease;
+            height: 100%;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            background: rgba(13, 110, 253, 0.05);
+        }
+
+        .skill-badge {
+            background: rgba(13, 110, 253, 0.1);
+            color: var(--primary);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .trajectory-item {
+            border-left: 2px solid var(--primary);
+            padding-left: 25px;
+            margin-left: 10px;
+            position: relative;
+            padding-bottom: 30px;
+        }
+
+        .trajectory-item::before {
+            content: "";
+            position: absolute;
+            left: -9px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        .btn-primary { border-radius: 50px; font-weight: 600; padding: 12px 30px; text-decoration: none; }
+        .btn-outline-light { border-radius: 50px; padding: 12px 30px; text-decoration: none; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">G.CHAGAS <span class="text-primary">_</span></a>
+            <div class="collapse navbar-collapse justify-content-end">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#trajectory">Trajectory</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light ms-lg-3 px-4" href="file:///C:/Users/acamp/OneDrive/Área%20de%20Trabalho/Bristol/Resume_Guilherme_Chagas.docx" download>
+                            <i class="bi bi-download me-2"></i>Download CV
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary ms-lg-2 px-4 text-white" href="https://pllin.com.br" target="_blank">
+                            Visit Pllin.com.br
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container text-center">
+            <h1 class="display-2 fw-800 mb-3">Guilherme Lima das Chagas</h1>
+            <p class="h4 text-primary mb-4">Software Engineer | Backend Specialist</p>
+            <p class="lead text-dim mx-auto mb-5" style="max-width: 800px;">
+                Results-oriented Software Engineer with a solid background in backend development using C# and SQL. 
+                Expertise in maintaining business-critical systems (POS/CRM) and pursuing a degree in Computer Engineering at <b>Fundação Santo André</b>.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
+                <span class="skill-badge">C# / .NET</span>
+                <span class="skill-badge">SQL Server</span>
+                <span class="skill-badge">PHP</span>
+                <span class="skill-badge">MongoDB</span>
+                <span class="skill-badge">Java Spring Boot</span>
+                <span class="skill-badge">Python</span>
+                <span class="skill-badge">JavaScript</span>
+            </div>
+        </div>
+    </header>
+
+    <section id="trajectory" class="py-5">
+        <div class="container">
+            <h2 class="display-5 fw-bold mb-5 text-center">Career Trajectory</h2>
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="trajectory-item">
+                        <h4 class="fw-bold">Software Developer @ Datamaxi</h4>
+                        <p class="text-primary mb-1">August 2023 – Present</p>
+                        <p class="text-dim">Technical leadership in version control (Git) and maintenance of core backend services for POS and CRM systems. Focused on database optimization and high-performance business logic.</p>
+                    </div>
+                    <div class="trajectory-item">
+                        <h4 class="fw-bold">B.S. in Computer Engineering</h4>
+                        <p class="text-primary mb-1">Fundação Santo André (FSA) | Expected Jan 2027</p>
+                        <p class="text-dim">Academic focus on engineering scalable solutions, hardware-software integration, and advanced algorithms.</p>
+                    </div>
+                    <div class="trajectory-item">
+                        <h4 class="fw-bold">High School Diploma</h4>
+                        <p class="text-primary mb-1">Colégio Singular</p>
+                        <p class="text-dim">Foundational technical and scientific education.</p>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="glass-card">
+                        <h4 class="fw-bold mb-4">Certifications</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>Harvard CS50:</b> Intro to Computer Science</li>
+                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>ITA:</b> Java Web Development</li>
+                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>Udemy:</b> Java Spring, C# .NET & SQL Management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="py-5">
+        <div class="container">
+            <h2 class="display-5 fw-bold mb-5 text-center">Project Portfolio</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">Autonomous Racing Champion</h5>
+                        <p class="small text-dim">Awarded 1st place in the Arduino-based autonomous car competition at Mauá University. Built the navigation logic and sensor integration from scratch.</p>
+                        <span class="badge bg-primary rounded-pill small">Arduino & C++</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">Mythos TCG</h5>
+                        <p class="small text-dim">An online Trading Card Game currently in development. Focusing on complex game state logic, server-side asset management, and card mechanics.</p>
+                        <span class="badge bg-primary rounded-pill small">C# & .NET</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">Assistive Braille Tech</h5>
+                        <p class="small text-dim">A low-cost accessibility solution using Python and OpenCV to read and translate Braille patterns into digital text for the visually impaired.</p>
+                        <span class="badge bg-primary rounded-pill small">Python & OpenCV</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">SST Safety Software</h5>
+                        <p class="small text-dim">Specialized mission-critical system designed for firefighters to improve location accuracy and rescue coordination during emergency responses.</p>
+                        <span class="badge bg-primary rounded-pill small">Systems Design</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">AI Agent Development</h5>
+                        <p class="small text-dim">Script with autonomous learning capabilities designed to ingest and analyze local codebases, providing insights and automation for developers.</p>
+                        <span class="badge bg-primary rounded-pill small">AI & Python</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">Financial Back-office</h5>
+                        <p class="small text-dim">Full-featured management software tailored for recreational activities and camps, managing cash flow, registration, and reporting.</p>
+                        <span class="badge bg-primary rounded-pill small">C# & SQL Server</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">MYDAILY</h5>
+                        <p class="small text-dim">A productivity enabler developed within the Datamaxi ecosystem to facilitate Scrum ceremonies and daily progress tracking.</p>
+                        <span class="badge bg-primary rounded-pill small">C# & Scrum</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">Auto-Translator Framework</h5>
+                        <p class="small text-dim">An automated translation framework developed at FSA to handle mass localization of software strings efficiently.</p>
+                        <span class="badge bg-primary rounded-pill small">JavaScript</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h5 class="fw-bold mb-3">Sust.ai</h5>
+                        <p class="small text-dim">Software solutions developed for the Mauá Sustainability challenge, focusing on resource optimization and green technology.</p>
+                        <span class="badge bg-primary rounded-pill small">Sustainability Tech</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-5 text-center border-top border-secondary border-opacity-10 mt-5">
+        <p class="text-dim">Guilherme Chagas | São Bernardo do Campo, SP | gui.lima3009@gmail.com</p>
+        <div class="d-flex justify-content-center gap-3 mt-3">
+            <a href="https://github.com/6uigol" target="_blank" class="text-white fs-4"><i class="bi bi-github"></i></a>
+            <a href="https://linkedin.com/in/guilherme-lima-das-chagas-38a6a4230" target="_blank" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
