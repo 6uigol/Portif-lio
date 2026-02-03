@@ -28,12 +28,12 @@
 
         .navbar {
             backdrop-filter: blur(15px);
-            background: rgba(5, 5, 5, 0.8) !important;
+            background: rgba(5, 5, 5, 0.85) !important;
             border-bottom: 1px solid var(--border);
         }
 
         .hero {
-            padding: 140px 0 80px;
+            padding: 140px 0 60px;
             background: radial-gradient(circle at 90% 10%, rgba(13, 110, 253, 0.15), transparent);
         }
 
@@ -42,13 +42,13 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 30px;
+            padding: 25px;
             transition: all 0.4s ease;
             height: 100%;
         }
 
         .glass-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-5px);
             border-color: var(--primary);
             background: rgba(13, 110, 253, 0.05);
         }
@@ -56,13 +56,13 @@
         .skill-badge {
             background: rgba(13, 110, 253, 0.1);
             color: var(--primary);
-            padding: 8px 18px;
+            padding: 6px 14px;
             border-radius: 50px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             border: 1px solid rgba(13, 110, 253, 0.2);
             display: inline-block;
-            margin: 5px;
+            margin: 4px;
         }
 
         .trajectory-item {
@@ -84,21 +84,24 @@
             background: var(--primary);
         }
 
-        /* Adjustments for mobile buttons */
+        /* Mobile Fixes */
         @media (max-width: 991px) {
             .navbar-collapse {
-                background: rgba(5, 5, 5, 0.95);
-                margin-top: 15px;
+                background: #0a0a0a;
                 padding: 20px;
-                border-radius: 15px;
+                border-radius: 20px;
+                margin-top: 10px;
                 border: 1px solid var(--border);
             }
-            .nav-item { margin-bottom: 10px; width: 100%; }
-            .btn-outline-light, .btn-primary { width: 100%; display: block; margin-left: 0 !important; }
+            .nav-link.btn {
+                margin: 10px 0 !important;
+                text-align: center;
+            }
+            .display-3 { font-size: 2.5rem; }
         }
 
-        .btn-primary { border-radius: 50px; font-weight: 600; padding: 12px 30px; text-decoration: none; }
-        .btn-outline-light { border-radius: 50px; padding: 12px 30px; text-decoration: none; display: inline-block; }
+        .btn-primary { border-radius: 50px; font-weight: 600; padding: 10px 25px; text-decoration: none; display: inline-block; }
+        .btn-outline-light { border-radius: 50px; padding: 10px 25px; text-decoration: none; display: inline-block; }
     </style>
 </head>
 <body>
@@ -107,16 +110,16 @@
         <div class="container">
             <a class="navbar-brand fw-bold" href="#">G.CHAGAS <span class="text-primary">_</span></a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="navbarContent">
+            <div class="collapse navbar-collapse" id="navContent">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="#trajectory">Trajectory</a></li>
                     <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light ms-lg-3 px-4" href="file:///C:/Users/acamp/OneDrive/Área%20de%20Trabalho/Bristol/Resume_Guilherme_Chagas_02022026.docx" download>
+                        <a class="nav-link btn btn-outline-light ms-lg-3 px-4" href="Resume_Guilherme_Chagas_02022026.docx" download>
                             <i class="bi bi-download me-2"></i>Download CV
                         </a>
                     </li>
@@ -134,11 +137,11 @@
         <div class="container">
             <h1 class="display-3 fw-800 mb-3">Guilherme Lima das Chagas</h1>
             <p class="h4 text-primary mb-4">Software Engineer | Backend Specialist</p>
-            <p class="lead text-dim mx-auto mb-5" style="max-width: 800px;">
+            <p class="lead text-dim mx-auto mb-5 px-3" style="max-width: 800px;">
                 Results-oriented Software Engineer with a solid background in backend development using C# and SQL. 
                 Expertise in maintaining business-critical systems (POS/CRM) and pursuing a degree in Computer Engineering at <b>Fundação Santo André</b>.
             </p>
-            <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
+            <div class="d-flex flex-wrap justify-content-center gap-1 mb-5 px-2">
                 <span class="skill-badge">C# / .NET</span>
                 <span class="skill-badge">SQL Server</span>
                 <span class="skill-badge">PHP</span>
@@ -151,33 +154,28 @@
     </header>
 
     <section id="trajectory" class="py-5">
-        <div class="container">
-            <h2 class="display-5 fw-bold mb-5 text-center">Career Trajectory</h2>
+        <div class="container px-4">
+            <h2 class="display-5 fw-bold mb-5 text-center">Career Journey</h2>
             <div class="row">
                 <div class="col-lg-7">
                     <div class="trajectory-item">
                         <h4 class="fw-bold">Software Developer @ Datamaxi</h4>
                         <p class="text-primary mb-1">August 2023 – Present</p>
-                        <p class="text-dim">Technical leadership in version control (Git) across core system modules. Developed and maintained backend services for business-critical POS and CRM systems using C# and SQL Server.</p>
+                        <p class="text-dim">Technical leadership in version control (Git) and maintenance of core backend services for POS and CRM systems. Focused on database optimization.</p>
                     </div>
                     <div class="trajectory-item">
                         <h4 class="fw-bold">B.S. in Computer Engineering</h4>
                         <p class="text-primary mb-1">Fundação Santo André (FSA) | Expected Jan 2027</p>
-                        <p class="text-dim">Academic focus on engineering scalable solutions, hardware-software integration, and advanced algorithms.</p>
-                    </div>
-                    <div class="trajectory-item">
-                        <h4 class="fw-bold">High School Diploma</h4>
-                        <p class="text-primary mb-1">Colégio Singular</p>
-                        <p class="text-dim">Completed foundational scientific and technical secondary education.</p>
+                        <p class="text-dim">Focus on engineering scalable solutions and advanced algorithms.</p>
                     </div>
                 </div>
                 <div class="col-lg-5">
-                    <div class="glass-card">
+                    <div class="glass-card mt-4 mt-lg-0">
                         <h4 class="fw-bold mb-4">Certifications</h4>
-                        <ul class="list-unstyled">
-                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>Harvard CS50:</b> Introduction to Computer Science</li>
-                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>Harvard Online:</b> Java Web Development</li>
-                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>Udemy:</b> Java Spring, C# .NET, & SQL Management</li>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>Harvard CS50:</b> Computer Science</li>
+                            <li class="mb-3"><i class="bi bi-patch-check text-primary me-2"></i><b>Harvard Online:</b> Java Web Dev</li>
+                            <li class="mb-0"><i class="bi bi-patch-check text-primary me-2"></i><b>Udemy:</b> Java, .NET & SQL</li>
                         </ul>
                     </div>
                 </div>
@@ -186,70 +184,49 @@
     </section>
 
     <section id="projects" class="py-5">
-        <div class="container">
-            <h2 class="display-5 fw-bold mb-5 text-center">Project Portfolio</h2>
+        <div class="container px-4">
+            <h2 class="display-5 fw-bold mb-5 text-center">Projects</h2>
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="glass-card">
-                        <h5 class="fw-bold mb-3">Autonomous Racing Champion</h5>
-                        <p class="small text-dim">Secured 1st place in the Arduino-based autonomous racing competition at Mauá University. Built high-speed navigation algorithms and sensor fusion logic.</p>
+                        <h5 class="fw-bold mb-2">Autonomous Racing Champ</h5>
+                        <p class="small text-dim">1st place in Arduino-based competition at Mauá University.</p>
                         <span class="badge bg-primary rounded-pill small">Arduino & C++</span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card">
-                        <h5 class="fw-bold mb-3">Mythos TCG</h5>
-                        <p class="small text-dim">Developing an online Trading Card Game. Focused on server-side game logic, real-time synchronization, and digital asset management for card inventories.</p>
+                        <h5 class="fw-bold mb-2">Mythos TCG</h5>
+                        <p class="small text-dim">Online Trading Card Game focused on game logic and asset management.</p>
                         <span class="badge bg-primary rounded-pill small">C# & .NET</span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card">
-                        <h5 class="fw-bold mb-3">Assistive Braille Tech</h5>
-                        <p class="small text-dim">A low-cost accessibility project using Python and OpenCV to interpret Braille patterns via computer vision and translate them into digital text.</p>
+                        <h5 class="fw-bold mb-2">Assistive Braille Tech</h5>
+                        <p class="small text-dim">Accessibility project using Python and OpenCV for Braille translation.</p>
                         <span class="badge bg-primary rounded-pill small">Python & OpenCV</span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card">
-                        <h5 class="fw-bold mb-3">SST Safety Software</h5>
-                        <p class="small text-dim">A specialized rescue-coordination system designed for firefighters to track and locate individuals accurately during emergency responses.</p>
+                        <h5 class="fw-bold mb-2">SST Safety Software</h5>
+                        <p class="small text-dim">Rescue coordination system for emergency services.</p>
                         <span class="badge bg-primary rounded-pill small">Software Engineering</span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card">
-                        <h5 class="fw-bold mb-3">AI Agent Development</h5>
-                        <p class="small text-dim">An autonomous AI script engineered to learn, map, and analyze local codebases to provide intelligent maintenance and productivity insights.</p>
+                        <h5 class="fw-bold mb-2">AI Agent Development</h5>
+                        <p class="small text-dim">AI script engineered to analyze and learn from local codebases.</p>
                         <span class="badge bg-primary rounded-pill small">AI & Python</span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="glass-card">
-                        <h5 class="fw-bold mb-3">Financial Back-office</h5>
-                        <p class="small text-dim">Full-featured management software tailored for recreational activities and camps, managing registrations, payments, and fiscal reporting.</p>
+                        <h5 class="fw-bold mb-2">Financial Back-office</h5>
+                        <p class="small text-dim">Management software for large-scale recreational camps.</p>
                         <span class="badge bg-primary rounded-pill small">C# & SQL Server</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="glass-card">
-                        <h5 class="fw-bold mb-3">MYDAILY</h5>
-                        <p class="small text-dim">A productivity facilitator built for the Datamaxi ecosystem to streamline Scrum ceremonies and daily progress tracking.</p>
-                        <span class="badge bg-primary rounded-pill small">C# & Scrum</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="glass-card">
-                        <h5 class="fw-bold mb-3">Auto-Translator Framework</h5>
-                        <p class="small text-dim">An automated localization framework developed at FSA to handle large-scale translation tasks across diverse software platforms.</p>
-                        <span class="badge bg-primary rounded-pill small">JavaScript</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="glass-card">
-                        <h5 class="fw-bold mb-3">Sust.ai</h5>
-                        <p class="small text-dim">Software solutions developed for the Mauá Sustainability challenge, focusing on resource optimization and green technology.</p>
-                        <span class="badge bg-primary rounded-pill small">Sustainability Tech</span>
                     </div>
                 </div>
             </div>
@@ -257,14 +234,13 @@
     </section>
 
     <footer class="py-5 text-center border-top border-secondary border-opacity-10 mt-5">
-        <p class="text-dim">Guilherme Chagas | +55 11 99912-3309 | gui.lima3009@gmail.com</p>
+        <p class="text-dim">Guilherme Chagas | +55 11 99912-3309</p>
         <div class="d-flex justify-content-center gap-3 mt-3">
-            <a href="https://github.com/6uigol" target="_blank" class="text-white fs-4"><i class="bi bi-github"></i></a>
-            <a href="https://linkedin.com/in/guilherme-lima-das-chagas-38a6a4230" target="_blank" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+            <a href="https://github.com/6uigol" target="_blank" class="text-white fs-3"><i class="bi bi-github"></i></a>
+            <a href="https://linkedin.com/in/guilherme-lima-das-chagas-38a6a4230" target="_blank" class="text-white fs-3"><i class="bi bi-linkedin"></i></a>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
