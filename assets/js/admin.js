@@ -222,17 +222,6 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   });
 
-  $("#resetBtn").addEventListener("click", async () => {
-    if (!confirm("Restaurar a lista de projetos padrão? As alterações atuais serão perdidas.")) return;
-    try {
-      await store.reset();
-      resetForm();
-      toast("Projetos restaurados.");
-    } catch (err) {
-      handleError(err);
-    }
-  });
-
   $("#logoutBtn").addEventListener("click", () => {
     store.clearAdminKey();
     adminModal.close();

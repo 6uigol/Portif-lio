@@ -263,9 +263,6 @@
       [next[i], next[j]] = [next[j], next[i]];
       await persist(next);
     },
-    async reset() {
-      await persist(clone(window.DEFAULT_PROJECTS));
-    },
     exportJSON() {
       return JSON.stringify(projects, null, 2);
     },
