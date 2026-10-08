@@ -1,6 +1,6 @@
 /*
  * Galáxia de Projetos — mini game em canvas.
- * Cada projeto é um planeta orbitando o "sol" GC. A nave segue o mouse/dedo
+ * Cada projeto é um planeta em órbita. A nave segue o mouse/dedo
  * (ou WASD/setas). Encostar num planeta abre o projeto.
  */
 (function () {
@@ -90,7 +90,6 @@
       ship.angle = -Math.PI / 4;
     }
 
-    function sunRadius() { return clamp(Math.min(W, H) * 0.05, 18, 30); }
 
     function buildStars() {
       const count = Math.round((W * H) / 2600);
@@ -108,7 +107,7 @@
       const baseR = clamp(minSide * 0.052, 17, 32) * (n > 10 ? 0.85 : 1);
       const old = new Map(planets.map((p) => [p.project.id, p]));
 
-      // Distribui em 1 ou 2 anéis elípticos ao redor do sol
+      // Distribui em 1 ou 2 anéis elípticos ao redor do centro
       // Em telas estreitas um anel único distribui melhor os planetas
       const singleRing = n <= 5 || (W < 600 && n <= 12);
       const inner = Math.ceil(n * 0.4);
@@ -154,7 +153,7 @@
       for (let tries = 0; tries < 20; tries++) {
         const x = rand(30, W - 30);
         const y = rand(40, H - 30);
-        const blocked = planets.some((p) => dist(x, y, p.x, p.y) < p.r + 30) || dist(x, y, W / 2, H / 2) < sunRadius() + 30;
+        const blocked = planets.some((p) => dist(x, y, p.x, p.y) < p.r + 30);
         if (!blocked) {
           bits.push({ x, y, born: t, phase: Math.random() * TAU });
           return;
@@ -311,17 +310,6 @@
         });
       }
 
-      // Sol: empurra a nave para fora
-      const sr = sunRadius();
-      const ds = dist(ship.x, ship.y, W / 2, H / 2);
-      if (ds < sr + ship.r) {
-        const nx = (ship.x - W / 2) / (ds || 1);
-        const ny = (ship.y - H / 2) / (ds || 1);
-        ship.x = W / 2 + nx * (sr + ship.r);
-        ship.y = H / 2 + ny * (sr + ship.r);
-        ship.vx += nx * 2; ship.vy += ny * 2;
-      }
-
       // Planetas: aproximação e pouso
       for (const p of planets) {
         const d = dist(ship.x, ship.y, p.x, p.y);
@@ -374,7 +362,6 @@
       ctx.clearRect(0, 0, W, H);
       drawStars();
       drawOrbits();
-      drawSun();
       drawBits();
       planets.forEach(drawPlanet);
       drawParticles();
@@ -426,33 +413,6 @@
         ctx.stroke();
       });
       ctx.restore();
-    }
-
-    function drawSun() {
-      const r = sunRadius();
-      const pulse = reduceMotion ? 1 : 1 + Math.sin(t * 1.5) * 0.04;
-      const glow = ctx.createRadialGradient(W / 2, H / 2, r * 0.5, W / 2, H / 2, r * 3.2);
-      glow.addColorStop(0, "rgba(124,92,255,0.35)");
-      glow.addColorStop(1, "rgba(124,92,255,0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(W / 2, H / 2, r * 3.2, 0, TAU);
-      ctx.fill();
-
-      const body = ctx.createRadialGradient(W / 2 - r * 0.3, H / 2 - r * 0.3, r * 0.1, W / 2, H / 2, r * pulse);
-      body.addColorStop(0, "#ffffff");
-      body.addColorStop(0.35, "#a78bfa");
-      body.addColorStop(1, "#5b3df5");
-      ctx.fillStyle = body;
-      ctx.beginPath();
-      ctx.arc(W / 2, H / 2, r * pulse, 0, TAU);
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.font = `700 ${Math.round(r * 0.7)}px "Space Grotesk", sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("GC", W / 2, H / 2 + 1);
     }
 
     function drawBits() {

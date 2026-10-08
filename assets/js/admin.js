@@ -73,6 +73,7 @@
     resetForm();
     renderStatus();
     renderList(store.get());
+    renderCV();
     adminModal.showModal();
   }
 
@@ -236,6 +237,62 @@
     store.clearAdminKey();
     adminModal.close();
     toast("Sessão encerrada.");
+  });
+
+  /* ---------- Currículo ---------- */
+  const cvForm = $("#cvForm");
+  const cvFile = $("#cvFile");
+  const cvCurrent = $("#cvCurrent");
+  const cvPickLabel = $("#cvPickLabel");
+  const cvSubmit = $("#cvSubmit");
+  const cvError = $("#cvError");
+
+  function formatSize(bytes) {
+    return bytes > 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1) + " MB" : Math.max(1, Math.round(bytes / 1024)) + " KB";
+  }
+
+  async function renderCV() {
+    cvForm.reset();
+    cvPickLabel.textContent = "Escolher arquivo";
+    cvSubmit.disabled = true;
+    cvError.hidden = true;
+    cvCurrent.textContent = "Carregando…";
+    try {
+      const info = await store.getCVInfo();
+      if (info) {
+        const date = info.updatedAt && info.updatedAt.toDate ? info.updatedAt.toDate().toLocaleDateString("pt-BR") : "";
+        cvCurrent.textContent = "Atual: " + info.name + " (" + formatSize(info.size) + (date ? ", enviado em " + date : "") + ")";
+      } else {
+        cvCurrent.textContent = "Atual: arquivo padrão do site. Envie um PDF ou Word para substituir.";
+      }
+    } catch (err) {
+      cvCurrent.textContent = "Não foi possível consultar o currículo atual.";
+    }
+  }
+
+  cvFile.addEventListener("change", () => {
+    const file = cvFile.files[0];
+    cvPickLabel.textContent = file ? file.name : "Escolher arquivo";
+    cvSubmit.disabled = !file;
+    cvError.hidden = true;
+  });
+
+  cvForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    cvSubmit.disabled = true;
+    cvSubmit.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando…';
+    try {
+      await store.uploadCV(cvFile.files[0]);
+      toast("Currículo atualizado! 📄");
+      await renderCV();
+    } catch (err) {
+      cvError.textContent = err.message;
+      cvError.hidden = false;
+      cvSubmit.disabled = false;
+      if (/expirada/i.test(err.message)) handleError(err);
+    } finally {
+      cvSubmit.innerHTML = '<i class="bi bi-cloud-upload"></i> Substituir currículo';
+    }
   });
 
   function handleError(err) {

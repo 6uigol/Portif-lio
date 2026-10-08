@@ -31,7 +31,7 @@
         <a href="#experiencia">Experiência</a>
         <a href="#projetos">Projetos</a>
         <a href="#contato">Contato</a>
-        <a class="btn btn--sm btn--ghost nav__cv" href="assets/docs/Curriculo_Guilherme_Chagas.docx" download>
+        <a class="btn btn--sm btn--ghost nav__cv" href="assets/docs/Curriculo_Guilherme_Chagas.docx" download data-cv>
           <i class="bi bi-download"></i> Currículo
         </a>
       </nav>
@@ -70,7 +70,7 @@
 
           <div class="hero__actions">
             <a class="btn btn--primary" href="#galaxia"><i class="bi bi-rocket-takeoff"></i> Explorar projetos</a>
-            <a class="btn btn--ghost" href="assets/docs/Curriculo_Guilherme_Chagas.docx" download><i class="bi bi-file-earmark-arrow-down"></i> Baixar currículo</a>
+            <a class="btn btn--ghost" href="assets/docs/Curriculo_Guilherme_Chagas.docx" download data-cv><i class="bi bi-file-earmark-arrow-down"></i> Baixar currículo</a>
           </div>
         </div>
 
@@ -362,6 +362,19 @@
           </div>
         </div>
       </div>
+
+      <form class="card cv-card" id="cvForm">
+        <div class="cv-card__info">
+          <h4><i class="bi bi-file-earmark-person"></i> Currículo</h4>
+          <p class="muted small" id="cvCurrent">Carregando…</p>
+        </div>
+        <label class="cv-card__pick btn btn--sm btn--ghost">
+          <i class="bi bi-paperclip"></i> <span id="cvPickLabel">Escolher arquivo</span>
+          <input type="file" id="cvFile" accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" hidden>
+        </label>
+        <button type="submit" class="btn btn--sm btn--primary" id="cvSubmit" disabled><i class="bi bi-cloud-upload"></i> Substituir currículo</button>
+        <p class="form-error" id="cvError" role="alert" hidden></p>
+      </form>
     </div>
   </dialog>
 

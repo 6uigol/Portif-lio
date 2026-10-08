@@ -5,10 +5,9 @@ rules_version = '2';
 // Senha do dia = (dia × 100 + mês) + 2003, no horário de Brasília (UTC-3).
 // Ex.: 08/10 → 810 + 2003 = 2813.
 //
-// Cada salvamento é um batch com dois documentos:
-//   adminWrites/{id}    → { key, at }   (ninguém consegue ler; só é criado com a senha certa)
-//   portfolio/projects  → { items, writeId, updatedAt }
-// O documento de projetos só é aceito se o adminWrites citado em writeId tiver a senha correta.
+// Toda escrita é um batch que inclui um comprovante:
+//   adminWrites/{id} → { key, at }   (ninguém consegue ler; só é criado com a senha certa)
+// Os demais documentos citam esse comprovante em writeId e só são aceitos se ele for válido.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -17,15 +16,38 @@ service cloud.firestore {
       return t.day() * 100 + t.month() + 2003;
     }
 
+    function validProof() {
+      return request.resource.data.writeId is string
+        && getAfter(/databases/$(database)/documents/adminWrites/$(request.resource.data.writeId)).data.key == todayKey();
+    }
+
+    // Lista de projetos
     match /portfolio/projects {
       allow read: if true;
       allow write: if request.resource.data.keys().hasOnly(['items', 'writeId', 'updatedAt'])
         && request.resource.data.items is list
         && request.resource.data.items.size() <= 50
-        && request.resource.data.writeId is string
-        && getAfter(/databases/$(database)/documents/adminWrites/$(request.resource.data.writeId)).data.key == todayKey();
+        && validProof();
     }
 
+    // Currículo: metadados + arquivo dividido em partes (base64)
+    match /files/cv {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['name', 'type', 'size', 'chunks', 'version', 'writeId', 'updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 120
+        && request.resource.data.size is int && request.resource.data.size <= 5242880
+        && request.resource.data.chunks is int && request.resource.data.chunks <= 8
+        && validProof();
+    }
+
+    match /files/cv/chunks/{n} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['data', 'version', 'writeId'])
+        && request.resource.data.data is string
+        && validProof();
+    }
+
+    // Comprovantes da senha
     match /adminWrites/{id} {
       allow create: if request.resource.data.keys().hasOnly(['key', 'at'])
         && request.resource.data.key == todayKey();

@@ -34,6 +34,17 @@ O botão **"É você, Guilherme?"** no rodapé pede a senha do dia:
 A senha é conferida pelas regras do Firestore — a fórmula não aparece no JavaScript do site.
 Ninguém consegue editar os projetos sem ela, nem ler as senhas usadas.
 
+## Currículo
+
+No painel, a área **Currículo** aceita PDF ou Word (até 5 MB) e substitui o arquivo que os
+visitantes baixam. Ele fica salvo no Firestore (coleção `files`), sem usar o Firebase Storage,
+que exige plano pago. Se nenhum for enviado, o site usa `assets/docs/Curriculo_Guilherme_Chagas.docx`.
+
+## Jogo
+
+A Galáxia de Projetos mostra no máximo 7 planetas, sorteados a cada visita.
+O limite fica em `MAX_PLANETS`, em `assets/js/main.js`.
+
 ## Alterando as regras
 
 Edite `firebase/firestore.rules` e cole no Firebase Console → Firestore Database → Regras → Publicar.

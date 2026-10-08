@@ -459,3 +459,13 @@ ul { margin: 0; padding: 0; list-style: none; }
   background: var(--surface); border: 1px solid var(--border); font-size: .95rem; color: var(--muted);
 }
 .credentials i { color: var(--accent-2); font-size: 1.05rem; }
+
+/* ---------- Currículo no painel ---------- */
+.cv-card { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+.cv-card__info { flex: 1 1 240px; min-width: 0; }
+.cv-card__info h4 { margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+.cv-card__info h4 i { color: var(--accent-2); }
+.cv-card__info p { margin: 0; overflow: hidden; text-overflow: ellipsis; }
+.cv-card__pick { cursor: pointer; max-width: 260px; }
+.cv-card__pick span { overflow: hidden; text-overflow: ellipsis; }
+.cv-card .form-error { flex-basis: 100%; }

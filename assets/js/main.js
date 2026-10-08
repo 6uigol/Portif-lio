@@ -94,6 +94,22 @@
     }, 2500);
   }
 
+  /* ---------- Download do currículo (Firebase, com o arquivo do site como reserva) ---------- */
+  $$("[data-cv]").forEach((link) => {
+    link.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        if (await store.downloadCV()) return;
+      } catch (err) { /* usa o arquivo padrão */ }
+      const a = document.createElement("a");
+      a.href = link.getAttribute("href");
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+  });
+
   /* ---------- Copiar contato ---------- */
   $$("[data-copy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -235,7 +251,7 @@
       hudTotal.textContent = total;
     },
     onComplete(score) {
-      setTimeout(() => toast(`🏆 Galáxia completa! Você visitou todos os projetos e fez ${score} bits.`), 400);
+      setTimeout(() => toast(`🏆 Galáxia completa! Você visitou todos os planetas e fez ${score} bits.`), 400);
     },
     onFirstMove() {
       setTimeout(() => hint.classList.add("is-hidden"), 2500);
@@ -258,11 +274,23 @@
   });
 
   /* ---------- Sincronização ---------- */
+  // O jogo mostra no máximo 7 planetas, sorteados a cada visita
+  const MAX_PLANETS = 7;
+  function pickPlanets(projects) {
+    const list = projects.slice();
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list.slice(0, MAX_PLANETS);
+  }
+
   store.subscribe((projects) => {
     renderFilters(projects);
     renderGrid(projects);
-    renderPlanetList(projects);
-    galaxy.setProjects(projects);
+    const planets = pickPlanets(projects);
+    renderPlanetList(planets);
+    galaxy.setProjects(planets);
     $("#statProjects").textContent = projects.length;
   });
 

@@ -145,6 +145,86 @@
     }
   }
 
+  /* ---------- Currículo ----------
+   * Guardado no Firestore (sem Firebase Storage, que exige plano pago):
+   *   files/cv            → { name, type, size, chunks, version, writeId, updatedAt }
+   *   files/cv/chunks/{n} → { data (base64), version, writeId }
+   */
+  const CV_MAX_BYTES = 5 * 1024 * 1024;
+  const CV_CHUNK = 900000; // caracteres base64 por documento (limite do Firestore: 1 MiB)
+  const CV_TYPES = /\.(pdf|docx?|odt)$/i;
+
+  function readAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+      reader.onerror = () => reject(new Error("Não foi possível ler o arquivo."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function getCVInfo() {
+    if (mode !== "cloud") return null;
+    const { db, doc, getDoc } = fb;
+    const snap = await getDoc(doc(db, "files", "cv"));
+    return snap.exists() ? snap.data() : null;
+  }
+
+  async function uploadCV(file) {
+    if (mode !== "cloud") throw new Error("Sem conexão com o Firebase.");
+    if (!file) throw new Error("Escolha um arquivo.");
+    if (!CV_TYPES.test(file.name)) throw new Error("Use um arquivo PDF ou Word (.pdf, .docx).");
+    if (file.size > CV_MAX_BYTES) throw new Error("Arquivo muito grande (máximo 5 MB).");
+
+    const base64 = await readAsBase64(file);
+    const parts = [];
+    for (let i = 0; i < base64.length; i += CV_CHUNK) parts.push(base64.slice(i, i + CV_CHUNK));
+
+    const { db, doc, writeBatch, serverTimestamp } = fb;
+    const version = Date.now().toString(36);
+    const batch = writeBatch(db);
+    const writeId = addProof(batch, getAdminKey());
+    parts.forEach((data, n) => batch.set(doc(db, "files", "cv", "chunks", String(n)), { data, version, writeId }));
+    batch.set(doc(db, "files", "cv"), {
+      name: file.name.slice(0, 120),
+      type: file.type || "application/octet-stream",
+      size: file.size,
+      chunks: parts.length,
+      version,
+      writeId,
+      updatedAt: serverTimestamp()
+    });
+    try {
+      await batch.commit();
+    } catch (err) {
+      throw new Error(denied(err) ? "Senha expirada. Entre novamente." : "Não foi possível enviar o currículo.");
+    }
+  }
+
+  /* Baixa o currículo do Firebase. Retorna false se não houver nenhum enviado. */
+  async function downloadCV() {
+    if (mode !== "cloud") return false;
+    const info = await getCVInfo();
+    if (!info) return false;
+    const { db, doc, getDoc } = fb;
+    const snaps = await Promise.all(
+      Array.from({ length: info.chunks }, (_, n) => getDoc(doc(db, "files", "cv", "chunks", String(n))))
+    );
+    if (snaps.some((s) => !s.exists() || s.data().version !== info.version)) return false;
+    const binary = atob(snaps.map((s) => s.data().data).join(""));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: info.type }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = info.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return true;
+  }
+
   function uniqueId(name) {
     const base = slugify(name);
     let id = base;
@@ -189,6 +269,10 @@
     exportJSON() {
       return JSON.stringify(projects, null, 2);
     },
+
+    getCVInfo,
+    uploadCV,
+    downloadCV,
 
     verifyPassword,
     setAdminKey,
