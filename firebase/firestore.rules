@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// Regras do portfólio — cole em: Firebase Console → Firestore Database → Regras → Publicar.
+//
+// Senha do dia = (dia × 100 + mês) + 2003, no horário de Brasília (UTC-3).
+// Ex.: 08/10 → 810 + 2003 = 2813.
+//
+// Cada salvamento é um batch com dois documentos:
+//   adminWrites/{id}    → { key, at }   (ninguém consegue ler; só é criado com a senha certa)
+//   portfolio/projects  → { items, writeId, updatedAt }
+// O documento de projetos só é aceito se o adminWrites citado em writeId tiver a senha correta.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function todayKey() {
+      let t = request.time - duration.value(3, 'h');
+      return t.day() * 100 + t.month() + 2003;
+    }
+
+    match /portfolio/projects {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['items', 'writeId', 'updatedAt'])
+        && request.resource.data.items is list
+        && request.resource.data.items.size() <= 50
+        && request.resource.data.writeId is string
+        && getAfter(/databases/$(database)/documents/adminWrites/$(request.resource.data.writeId)).data.key == todayKey();
+    }
+
+    match /adminWrites/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['key', 'at'])
+        && request.resource.data.key == todayKey();
+      allow read, update, delete: if false;
+    }
+  }
+}
