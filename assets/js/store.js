@@ -7,7 +7,7 @@
  */
 (function () {
   const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
-  const SESSION_KEY = "gc-portfolio:admin-key";
+  const SESSION_KEY = "glc-portfolio:admin-key";
   const listeners = new Set();
 
   let projects = [];
