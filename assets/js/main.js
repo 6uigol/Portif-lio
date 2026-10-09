@@ -139,6 +139,31 @@
   const pm = $("#projectModal");
   let onProjectClose = null;
 
+  function formatSize(bytes) {
+    return bytes > 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1).replace(".", ",") + " MB" : Math.max(1, Math.round(bytes / 1024)) + " KB";
+  }
+
+  function fileLabel(file) {
+    return (store.isApk(file) ? "Baixar APK" : "Baixar arquivo") + " (" + formatSize(file.size) + ")";
+  }
+
+  /* Baixa o arquivo anexado ao projeto, mostrando "Baixando…" no botão clicado */
+  async function downloadProjectFile(project, button) {
+    if (!project.file) return;
+    const html = button ? button.innerHTML : "";
+    if (button) { button.disabled = true; button.innerHTML = '<i class="bi bi-hourglass-split"></i> Baixando…'; }
+    try {
+      if (!(await store.downloadFileById(project.file.id))) toast("Arquivo indisponível no momento.");
+    } catch (e) {
+      toast("Não foi possível baixar o arquivo.");
+    } finally {
+      if (button) { button.disabled = false; button.innerHTML = html; }
+    }
+  }
+
+  let modalProject = null;
+  $("#pmFile").addEventListener("click", (e) => downloadProjectFile(modalProject, e.currentTarget));
+
   function openProject(project) {
     const list = store.get();
     const index = list.findIndex((p) => p.id === project.id);
@@ -149,17 +174,16 @@
     $("#pmTags").innerHTML = (project.tags || []).map((t) => `<span>${escapeHtml(t)}</span>`).join("");
     $("#pmDesc").textContent = project.description || "Sem descrição.";
 
+    modalProject = project;
     const link = $("#pmLink");
-    if (project.link) {
-      link.href = project.link;
-      link.hidden = false;
-      $("#pmNoLink").hidden = true;
-    } else {
-      link.hidden = true;
-      $("#pmNoLink").hidden = false;
-    }
+    link.hidden = !project.link;
+    if (project.link) link.href = project.link;
+    const fileBtn = $("#pmFile");
+    fileBtn.hidden = !project.file;
+    if (project.file) $("#pmFileLabel").textContent = fileLabel(project.file);
+    $("#pmNoLink").hidden = Boolean(project.link || project.file);
     pm.showModal();
-    (project.link ? link : pm.querySelector("[data-close].btn")).focus();
+    (project.link ? link : project.file ? fileBtn : pm.querySelector("[data-close].btn")).focus();
   }
 
   pm.addEventListener("close", () => {
@@ -197,9 +221,11 @@
         <article class="project-card" style="--c:${color}; animation-delay:${Math.min(index, 8) * 40}ms" data-id="${escapeHtml(p.id)}">
           <div class="project-card__top">
             <button class="project-icon" data-open aria-label="Ver detalhes de ${name}">${escapeHtml(window.ProjectVisual.initials(p.name))}</button>
-            ${p.link
-              ? `<a class="project-card__open" href="${escapeHtml(p.link)}" target="_blank" rel="noopener" aria-label="Abrir ${name} em nova aba"><i class="bi bi-arrow-up-right"></i></a>`
-              : `<span class="project-card__private"><i class="bi bi-link-45deg"></i> sem link</span>`}
+            <div class="project-card__actions">
+              ${p.file ? `<button class="project-card__open" data-download aria-label="${escapeHtml(fileLabel(p.file))} de ${name}" title="${escapeHtml(fileLabel(p.file))}"><i class="bi bi-${store.isApk(p.file) ? "android2" : "download"}"></i></button>` : ""}
+              ${p.link ? `<a class="project-card__open" href="${escapeHtml(p.link)}" target="_blank" rel="noopener" aria-label="Abrir ${name} em nova aba"><i class="bi bi-arrow-up-right"></i></a>` : ""}
+              ${!p.link && !p.file ? `<span class="project-card__private"><i class="bi bi-link-45deg"></i> sem link</span>` : ""}
+            </div>
           </div>
           <h3><button data-open>${name}</button></h3>
           <p>${escapeHtml(p.description)}</p>
@@ -218,10 +244,39 @@
   });
 
   grid.addEventListener("click", (e) => {
-    if (!e.target.closest("[data-open]")) return;
+    const action = e.target.closest("[data-open], [data-download]");
+    if (!action) return;
     const id = e.target.closest("[data-id]").dataset.id;
     const project = store.get().find((p) => p.id === id);
-    if (project) openProject(project);
+    if (!project) return;
+    if (action.hasAttribute("data-download")) downloadProjectFile(project, action);
+    else openProject(project);
+  });
+
+  /* ---------- Downloads (somente APKs) ---------- */
+  const downloadsSection = $("#downloads");
+  const downloadsGrid = $("#downloadsGrid");
+
+  function renderDownloads(projects) {
+    const apps = projects.filter((p) => store.isApk(p.file));
+    downloadsSection.hidden = apps.length === 0;
+    $("#navDownloads").hidden = apps.length === 0;
+    downloadsGrid.innerHTML = apps.map((p) => `
+      <article class="download-card" data-id="${escapeHtml(p.id)}">
+        <span class="download-card__icon"><i class="bi bi-android2"></i></span>
+        <div class="download-card__info">
+          <strong>${escapeHtml(p.name)}</strong>
+          <span>${escapeHtml(p.file.name)} · ${formatSize(p.file.size)}</span>
+        </div>
+        <button class="btn btn--sm btn--primary" data-download><i class="bi bi-download"></i> Baixar</button>
+      </article>`).join("");
+  }
+
+  downloadsGrid.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-download]");
+    if (!btn) return;
+    const project = store.get().find((p) => p.id === btn.closest("[data-id]").dataset.id);
+    if (project) downloadProjectFile(project, btn);
   });
 
   /* ---------- Jogo ---------- */
@@ -288,6 +343,7 @@
   store.subscribe((projects) => {
     renderFilters(projects);
     renderGrid(projects);
+    renderDownloads(projects);
     const planets = pickPlanets(projects);
     renderPlanetList(planets);
     galaxy.setProjects(planets);

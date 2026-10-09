@@ -30,6 +30,7 @@
         <a href="#sobre">Sobre</a>
         <a href="#experiencia">Experiência</a>
         <a href="#projetos">Projetos</a>
+        <a href="#downloads" id="navDownloads" hidden>Downloads</a>
         <a href="#contato">Contato</a>
         <a class="btn btn--sm btn--ghost nav__cv" href="assets/docs/Curriculo_Guilherme_Chagas.docx" download data-cv>
           <i class="bi bi-download"></i> Currículo
@@ -258,11 +259,23 @@
       </div>
     </section>
 
+    <!-- ============ DOWNLOADS ============ -->
+    <section class="section" id="downloads" hidden>
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="eyebrow mono">// 05. downloads</span>
+          <h2>Apps para Android</h2>
+          <p class="muted">Baixe o APK e instale no seu celular. Se o Android pedir, permita a instalação de fontes desconhecidas.</p>
+        </div>
+        <div class="downloads-grid" id="downloadsGrid"></div>
+      </div>
+    </section>
+
     <!-- ============ CONTATO ============ -->
     <section class="section" id="contato">
       <div class="container">
         <div class="cta reveal">
-          <span class="eyebrow mono">// 05. contato</span>
+          <span class="eyebrow mono">// 06. contato</span>
           <h2>Vamos construir algo juntos?</h2>
           <p class="muted">Estou aberto a novas oportunidades, inclusive com mudança de cidade ou país. Respondo rápido.</p>
           <div class="hero__actions">
@@ -297,6 +310,7 @@
       <p id="pmDesc"></p>
       <div class="modal__actions">
         <a class="btn btn--primary" id="pmLink" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Abrir projeto</a>
+        <button class="btn btn--primary" id="pmFile" type="button"><i class="bi bi-download"></i> <span id="pmFileLabel">Baixar arquivo</span></button>
         <span class="muted small" id="pmNoLink"><i class="bi bi-link-45deg"></i> Projeto sem link público</span>
         <button class="btn btn--ghost" data-close>Continuar explorando</button>
       </div>
@@ -346,6 +360,17 @@
             <span>Tecnologias <em class="muted">(opcional, separadas por vírgula)</em></span>
             <input type="text" id="fTags" placeholder="React, TypeScript">
           </label>
+          <div class="field">
+            <span>Arquivo para download <em class="muted">(opcional — APK, PDF, Word ou ZIP, até 50 MB)</em></span>
+            <div class="file-field">
+              <label class="btn btn--sm btn--ghost file-field__pick">
+                <i class="bi bi-paperclip"></i> <span id="fFileLabel">Escolher arquivo</span>
+                <input type="file" id="fFile" accept=".apk,.pdf,.doc,.docx,.zip,application/vnd.android.package-archive,application/pdf,application/zip" hidden>
+              </label>
+              <span class="file-field__current muted small" id="fFileCurrent" hidden></span>
+              <button type="button" class="icon-btn icon-btn--danger" id="fFileRemove" aria-label="Remover arquivo" hidden><i class="bi bi-x-lg"></i></button>
+            </div>
+          </div>
           <p class="form-error" id="formError" role="alert" hidden></p>
           <div class="modal__actions">
             <button type="submit" class="btn btn--primary" id="formSubmit"><i class="bi bi-plus-lg"></i> Adicionar</button>

@@ -97,7 +97,7 @@
         <span class="project-icon" style="--c:${window.ProjectVisual.color(p, i)}">${escapeHtml(window.ProjectVisual.initials(p.name))}</span>
         <div class="admin-item__info">
           <strong>${escapeHtml(p.name)}</strong>
-          <span>${p.link ? escapeHtml(p.link.replace(/^https?:\/\//, "")) : "sem link"}</span>
+          <span>${p.link ? escapeHtml(p.link.replace(/^https?:\/\//, "")) : "sem link"}${p.file ? `<em class="admin-item__badge">${store.isApk(p.file) ? "APK" : "ARQUIVO"}</em>` : ""}</span>
         </div>
         <div class="admin-item__actions">
           <button class="icon-btn" data-action="up" aria-label="Mover para cima" ${i === 0 ? "disabled" : ""}><i class="bi bi-arrow-up"></i></button>
@@ -125,6 +125,7 @@
         case "delete":
           if (confirm(`Excluir o projeto "${project.name}"?`)) {
             await store.remove(id);
+            if (project.file) store.deleteFile(project.file.id).catch(() => {});
             if (fId.value === id) resetForm();
             toast("Projeto excluído.");
           }
@@ -141,6 +142,28 @@
     }
   });
 
+  /* ---------- Arquivo do projeto ---------- */
+  const fFile = $("#fFile"), fFileLabel = $("#fFileLabel"), fFileCurrent = $("#fFileCurrent"), fFileRemove = $("#fFileRemove");
+  const FILE_TYPES = /\.(apk|pdf|docx?|zip)$/i;
+  let currentFile = null; // arquivo já salvo no projeto em edição
+  let removeFile = false;
+
+  function renderFileField() {
+    const chosen = fFile.files[0];
+    fFileLabel.textContent = chosen ? chosen.name : currentFile && !removeFile ? "Trocar arquivo" : "Escolher arquivo";
+    const showCurrent = Boolean(currentFile && !removeFile && !chosen);
+    fFileCurrent.hidden = !showCurrent;
+    fFileCurrent.textContent = showCurrent ? "Atual: " + currentFile.name : "";
+    fFileRemove.hidden = !(chosen || showCurrent);
+  }
+
+  fFile.addEventListener("change", renderFileField);
+  fFileRemove.addEventListener("click", () => {
+    if (fFile.files[0]) fFile.value = "";
+    else removeFile = true;
+    renderFileField();
+  });
+
   /* ---------- Formulário ---------- */
   function fillForm(p) {
     fId.value = p.id;
@@ -148,6 +171,10 @@
     fDesc.value = p.description;
     fLink.value = p.link || "";
     fTags.value = (p.tags || []).join(", ");
+    fFile.value = "";
+    currentFile = p.file || null;
+    removeFile = false;
+    renderFileField();
     formTitle.textContent = "Editar projeto";
     formSubmit.innerHTML = '<i class="bi bi-check-lg"></i> Salvar alterações';
     formCancel.hidden = false;
@@ -159,6 +186,9 @@
   function resetForm() {
     form.reset();
     fId.value = "";
+    currentFile = null;
+    removeFile = false;
+    renderFileField();
     formTitle.textContent = "Novo projeto";
     formSubmit.innerHTML = '<i class="bi bi-plus-lg"></i> Adicionar';
     formCancel.hidden = true;
@@ -193,10 +223,20 @@
     if (!name) return showFormError("Informe o nome do projeto.", fName);
     if (!description) return showFormError("Escreva uma descrição.", fDesc);
     if (link && !isValidUrl(link)) return showFormError("Link inválido. Ex.: https://meu-projeto.vercel.app", fLink);
+    const chosen = fFile.files[0];
+    if (chosen && !FILE_TYPES.test(chosen.name)) return showFormError("Arquivo não suportado. Use APK, PDF, Word ou ZIP.");
 
-    const data = { name, description, link, tags };
+    const submitHtml = formSubmit.innerHTML;
     formSubmit.disabled = true;
     try {
+      let file = removeFile ? null : currentFile;
+      if (chosen) {
+        formSubmit.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando arquivo…';
+        file = await store.uploadProjectFile(chosen, (done, total) => {
+          formSubmit.innerHTML = `<i class="bi bi-hourglass-split"></i> Enviando ${Math.round((done / total) * 100)}%`;
+        });
+      }
+      const data = { name, description, link, tags, file };
       if (fId.value) {
         await store.update(fId.value, data);
         toast("Projeto atualizado!");
@@ -204,11 +244,14 @@
         await store.add(data);
         toast("Projeto adicionado! 🚀");
       }
+      // apaga do Firebase o arquivo antigo que foi trocado ou removido
+      if (currentFile && (chosen || removeFile)) store.deleteFile(currentFile.id).catch(() => {});
       resetForm();
     } catch (err) {
       handleError(err);
     } finally {
       formSubmit.disabled = false;
+      if (formSubmit.innerHTML.includes("Enviando")) formSubmit.innerHTML = submitHtml;
     }
   });
 

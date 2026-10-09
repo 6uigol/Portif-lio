@@ -54,8 +54,24 @@
         link: normalizeLink(p.link),
         tags: Array.isArray(p.tags)
           ? p.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 6)
-          : []
+          : [],
+        file: sanitizeFile(p.file)
       }));
+  }
+
+  /* Arquivo anexado ao projeto (APK, PDF...): só os metadados; o conteúdo fica em files/{id} */
+  function sanitizeFile(f) {
+    if (!f || typeof f.id !== "string" || typeof f.name !== "string") return null;
+    return {
+      id: f.id.slice(0, 40),
+      name: f.name.slice(0, 120),
+      size: Number(f.size) || 0,
+      type: String(f.type || "application/octet-stream").slice(0, 100)
+    };
+  }
+
+  function isApk(file) {
+    return Boolean(file && /\.apk$/i.test(file.name));
   }
 
   function emit() {
@@ -78,7 +94,7 @@
     ]);
     const config = useEmulator ? { apiKey: "demo", projectId: "demo-portfolio" } : window.FIREBASE_CONFIG;
     const db = firestore.getFirestore(initializeApp(config));
-    if (useEmulator) firestore.connectFirestoreEmulator(db, "127.0.0.1", 8080);
+    if (useEmulator) firestore.connectFirestoreEmulator(db, location.hostname, 8080);
     fb = { db, ...firestore };
     return fb;
   }
@@ -170,45 +186,54 @@
     return snap.exists() ? snap.data() : null;
   }
 
-  async function uploadCV(file) {
-    if (mode !== "cloud") throw new Error("Sem conexão com o Firebase.");
-    if (!file) throw new Error("Escolha um arquivo.");
-    if (!CV_TYPES.test(file.name)) throw new Error("Use um arquivo PDF ou Word (.pdf, .docx).");
-    if (file.size > CV_MAX_BYTES) throw new Error("Arquivo muito grande (máximo 5 MB).");
+  /* ---------- Arquivos genéricos (files/{id} + files/{id}/chunks/{n}) ---------- */
+  const FILE_MAX_BYTES = 50 * 1024 * 1024;
+  const CHUNKS_PER_BATCH = 9; // ~8 MB por envio (limite do Firestore: 10 MB por batch)
 
+  async function uploadFileTo(fileId, file, onProgress) {
     const base64 = await readAsBase64(file);
     const parts = [];
     for (let i = 0; i < base64.length; i += CV_CHUNK) parts.push(base64.slice(i, i + CV_CHUNK));
 
     const { db, doc, writeBatch, serverTimestamp } = fb;
-    const version = Date.now().toString(36);
-    const batch = writeBatch(db);
-    const writeId = addProof(batch, getAdminKey());
-    parts.forEach((data, n) => batch.set(doc(db, "files", "cv", "chunks", String(n)), { data, version, writeId }));
-    batch.set(doc(db, "files", "cv"), {
-      name: file.name.slice(0, 120),
-      type: file.type || "application/octet-stream",
-      size: file.size,
-      chunks: parts.length,
-      version,
-      writeId,
-      updatedAt: serverTimestamp()
-    });
+    const version = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const meta = { name: file.name.slice(0, 120), type: file.type || guessType(file.name), size: file.size };
     try {
+      // partes em lotes; os metadados vão por último para o download nunca ver um arquivo incompleto
+      for (let start = 0; start < parts.length; start += CHUNKS_PER_BATCH) {
+        const batch = writeBatch(db);
+        const writeId = addProof(batch, getAdminKey());
+        parts.slice(start, start + CHUNKS_PER_BATCH).forEach((data, k) =>
+          batch.set(doc(db, "files", fileId, "chunks", String(start + k)), { data, version, writeId }));
+        await batch.commit();
+        if (onProgress) onProgress(Math.min(start + CHUNKS_PER_BATCH, parts.length), parts.length);
+      }
+      const batch = writeBatch(db);
+      const writeId = addProof(batch, getAdminKey());
+      batch.set(doc(db, "files", fileId), { ...meta, chunks: parts.length, version, writeId, updatedAt: serverTimestamp() });
       await batch.commit();
     } catch (err) {
-      throw new Error(denied(err) ? "Senha expirada. Entre novamente." : "Não foi possível enviar o currículo.");
+      throw new Error(denied(err) ? "Senha expirada. Entre novamente." : "Não foi possível enviar o arquivo.");
     }
+    return { id: fileId, ...meta };
   }
 
-  /* Baixa o currículo do Firebase. Retorna false se não houver nenhum enviado. */
-  async function downloadCV() {
+  function guessType(name) {
+    if (/\.apk$/i.test(name)) return "application/vnd.android.package-archive";
+    if (/\.pdf$/i.test(name)) return "application/pdf";
+    if (/\.zip$/i.test(name)) return "application/zip";
+    return "application/octet-stream";
+  }
+
+  /* Baixa files/{id}. Retorna false se o arquivo não existir ou estiver incompleto. */
+  async function downloadFileById(fileId) {
     if (mode !== "cloud") return false;
-    const info = await getCVInfo();
-    if (!info) return false;
     const { db, doc, getDoc } = fb;
+    const metaSnap = await getDoc(doc(db, "files", fileId));
+    if (!metaSnap.exists()) return false;
+    const info = metaSnap.data();
     const snaps = await Promise.all(
-      Array.from({ length: info.chunks }, (_, n) => getDoc(doc(db, "files", "cv", "chunks", String(n))))
+      Array.from({ length: info.chunks }, (_, n) => getDoc(doc(db, "files", fileId, "chunks", String(n))))
     );
     if (snaps.some((s) => !s.exists() || s.data().version !== info.version)) return false;
     const binary = atob(snaps.map((s) => s.data().data).join(""));
@@ -221,8 +246,47 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
     return true;
+  }
+
+  /* Exclui files/{id} e suas partes. O comprovante adminWrites/del_{id}_{versão} autoriza a exclusão. */
+  async function deleteFile(fileId) {
+    if (mode !== "cloud" || !fileId) return;
+    const { db, doc, getDoc, writeBatch, serverTimestamp } = fb;
+    const snap = await getDoc(doc(db, "files", fileId));
+    if (!snap.exists()) return;
+    const { version, chunks } = snap.data();
+    // lote 1 cria o comprovante; os seguintes já o encontram. Metadados por último.
+    for (let start = 0; start < chunks || start === 0; start += CHUNKS_PER_BATCH) {
+      const batch = writeBatch(db);
+      if (start === 0) batch.set(doc(db, "adminWrites", "del_" + fileId + "_" + version), { key: Number(getAdminKey()), at: serverTimestamp() });
+      for (let n = start; n < Math.min(start + CHUNKS_PER_BATCH, chunks); n++) batch.delete(doc(db, "files", fileId, "chunks", String(n)));
+      await batch.commit();
+    }
+    const last = writeBatch(db);
+    last.delete(doc(db, "files", fileId));
+    await last.commit();
+  }
+
+  async function uploadProjectFile(file, onProgress) {
+    if (mode !== "cloud") throw new Error("Sem conexão com o Firebase.");
+    if (file.size > FILE_MAX_BYTES) throw new Error("Arquivo muito grande (máximo 50 MB).");
+    const id = "f_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    return uploadFileTo(id, file, onProgress);
+  }
+
+  async function uploadCV(file) {
+    if (mode !== "cloud") throw new Error("Sem conexão com o Firebase.");
+    if (!file) throw new Error("Escolha um arquivo.");
+    if (!CV_TYPES.test(file.name)) throw new Error("Use um arquivo PDF ou Word (.pdf, .docx).");
+    if (file.size > CV_MAX_BYTES) throw new Error("Arquivo muito grande (máximo 5 MB).");
+    await uploadFileTo("cv", file);
+  }
+
+  /* Baixa o currículo do Firebase. Retorna false se não houver nenhum enviado. */
+  function downloadCV() {
+    return downloadFileById("cv");
   }
 
   function uniqueId(name) {
@@ -270,6 +334,10 @@
     getCVInfo,
     uploadCV,
     downloadCV,
+    uploadProjectFile,
+    downloadFileById,
+    deleteFile,
+    isApk,
 
     verifyPassword,
     setAdminKey,

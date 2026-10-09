@@ -40,6 +40,14 @@ No painel, a área **Currículo** aceita PDF ou Word (até 5 MB) e substitui o a
 visitantes baixam. Ele fica salvo no Firestore (coleção `files`), sem usar o Firebase Storage,
 que exige plano pago. Se nenhum for enviado, o site usa `assets/docs/Curriculo_Guilherme_Chagas.docx`.
 
+## Arquivos dos projetos (APK, PDF...)
+
+No formulário do projeto dá para anexar um arquivo de até 50 MB (APK, PDF, Word ou ZIP).
+O visitante vê "Baixar APK"/"Baixar arquivo" no card e nos detalhes do projeto.
+Projetos com APK aparecem também na seção **Downloads** (que só é exibida quando existe algum APK).
+Os arquivos ficam no Firestore (`files/{id}`), divididos em partes. No plano gratuito cabe 1 GB no total,
+e cada download de um APK de 40 MB gasta ~60 leituras (o limite grátis é 50 mil leituras por dia).
+
 ## Jogo
 
 A Galáxia de Projetos mostra no máximo 7 planetas, sorteados a cada visita.

@@ -469,3 +469,28 @@ ul { margin: 0; padding: 0; list-style: none; }
 .cv-card__pick { cursor: pointer; max-width: 260px; }
 .cv-card__pick span { overflow: hidden; text-overflow: ellipsis; }
 .cv-card .form-error { flex-basis: 100%; }
+
+/* ---------- Arquivo do projeto (painel) ---------- */
+.file-field { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.file-field__pick { cursor: pointer; max-width: 100%; }
+.file-field__pick span, .file-field__current { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.admin-item__badge {
+  display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 6px; vertical-align: middle;
+  font: 600 .68rem var(--font-mono); background: rgba(52, 211, 153, .12); color: var(--success); border: 1px solid rgba(52, 211, 153, .3);
+}
+
+/* ---------- Downloads ---------- */
+.downloads-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.download-card {
+  display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border); transition: border-color .25s, background .25s;
+}
+.download-card:hover { border-color: rgba(52, 211, 153, .45); background: var(--surface-2); }
+.download-card__icon {
+  width: 48px; height: 48px; border-radius: 14px; flex: none; display: grid; place-items: center; font-size: 1.5rem;
+  background: rgba(52, 211, 153, .12); color: var(--success); border: 1px solid rgba(52, 211, 153, .25);
+}
+.download-card__info { flex: 1; min-width: 0; }
+.download-card__info strong { display: block; font-family: var(--font-display); font-size: 1.05rem; }
+.download-card__info span { display: block; font-size: .8rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-card__actions { display: flex; gap: 6px; }

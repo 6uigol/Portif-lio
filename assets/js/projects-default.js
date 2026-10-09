@@ -59,12 +59,5 @@ window.DEFAULT_PROJECTS = [
     description: "Ferramenta interna que altera IP e nome do banco de dados no App.config de vários projetos de uma vez (Retaguarda, Caixa, Totem, CRM e outros), sem mexer no resto do arquivo.",
     link: "https://trocabanco.vercel.app",
     tags: ["Ferramenta", "Automação"]
-  },
-  {
-    id: "carro-autonomo",
-    name: "Carro Autônomo",
-    description: "Carro autônomo programado em C com Arduino. Conquistou o 1º lugar na competição de carros autônomos do Instituto Mauá de Tecnologia (2022).",
-    link: "",
-    tags: ["Arduino", "C", "Hardware"]
   }
 ];
