@@ -129,15 +129,22 @@
     return ref.id;
   }
 
-  async function persist(next) {
+  /* Aplica a alteração sobre a lista MAIS RECENTE do Firebase, numa transação.
+     Assim duas abas/aparelhos abertos ao mesmo tempo não apagam o trabalho um do outro. */
+  async function persist(mutate) {
     if (mode !== "cloud") throw new Error("Firebase não configurado — veja o README.");
-    const clean = sanitize(next) || [];
-    const { db, doc, writeBatch, serverTimestamp } = fb;
-    const batch = writeBatch(db);
-    const writeId = addProof(batch, getAdminKey());
-    batch.set(doc(db, "portfolio", "projects"), { items: clean, writeId, updatedAt: serverTimestamp() });
+    const { db, doc, collection, runTransaction, serverTimestamp } = fb;
+    const ref = doc(db, "portfolio", "projects");
+    let clean;
     try {
-      await batch.commit();
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        const latest = (snap.exists() && sanitize(snap.data().items)) || clone(window.DEFAULT_PROJECTS);
+        clean = sanitize(mutate(latest)) || [];
+        const proofRef = doc(collection(db, "adminWrites"));
+        tx.set(proofRef, { key: Number(getAdminKey()), at: serverTimestamp() });
+        tx.set(ref, { items: clean, writeId: proofRef.id, updatedAt: serverTimestamp() });
+      });
     } catch (err) {
       throw new Error(denied(err) ? "Senha expirada. Entre novamente." : "Não foi possível salvar no Firebase.");
     }
@@ -187,33 +194,84 @@
   }
 
   /* ---------- Arquivos genéricos (files/{id} + files/{id}/chunks/{n}) ---------- */
-  const FILE_MAX_BYTES = 50 * 1024 * 1024;
-  const CHUNKS_PER_BATCH = 9; // ~8 MB por envio (limite do Firestore: 10 MB por batch)
+  const FILE_MAX_BYTES = 100 * 1024 * 1024;
+  const CHUNKS_PER_BATCH = 5; // ~4,5 MB por envio: mais estável em conexões lentas (limite do Firestore: 10 MB)
+
+  function formatMB(bytes) {
+    return (bytes / 1024 / 1024).toFixed(1).replace(".", ",") + " MB";
+  }
+
+  function transient(err) {
+    return err && /unavailable|deadline-exceeded|internal|aborted|resource-exhausted/.test(err.code || "");
+  }
+
+  /* Envia um lote, repetindo até 3 vezes em falhas de rede */
+  async function commitWithRetry(build) {
+    for (let attempt = 1; ; attempt++) {
+      const batch = fb.writeBatch(fb.db);
+      build(batch);
+      try {
+        return await batch.commit();
+      } catch (err) {
+        if (!transient(err) || attempt >= 3) throw err;
+        await new Promise((r) => setTimeout(r, 1500 * attempt));
+      }
+    }
+  }
+
+  /* Traduz o erro do Firebase numa mensagem que diz o motivo real */
+  async function explainUploadError(err) {
+    if (denied(err)) {
+      const keyStillValid = await verifyPassword(getAdminKey()).catch(() => false);
+      return keyStillValid
+        ? "O Firebase recusou o arquivo. Publique de novo as regras de firebase/firestore.rules no console do Firebase."
+        : "Senha expirada (o dia virou). Entre novamente.";
+    }
+    if (transient(err)) return "Conexão instável: o envio foi interrompido. Tente de novo numa rede melhor.";
+    return "Não foi possível enviar o arquivo (" + (err.code || err.message || "erro desconhecido") + ").";
+  }
+
+  /* Apaga partes enviadas de um upload que falhou no meio */
+  async function cleanupChunks(fileId, version, count, onProgress) {
+    const { db, doc, serverTimestamp } = fb;
+    for (let start = 0; start < count; start += CHUNKS_PER_BATCH) {
+      await commitWithRetry((batch) => {
+        if (start === 0) batch.set(doc(db, "adminWrites", "del_" + fileId + "_" + version), { key: Number(getAdminKey()), at: serverTimestamp() });
+        for (let n = start; n < Math.min(start + CHUNKS_PER_BATCH, count); n++) batch.delete(doc(db, "files", fileId, "chunks", String(n)));
+      });
+      if (onProgress) onProgress(Math.min(start + CHUNKS_PER_BATCH, count), count);
+    }
+  }
 
   async function uploadFileTo(fileId, file, onProgress) {
     const base64 = await readAsBase64(file);
     const parts = [];
     for (let i = 0; i < base64.length; i += CV_CHUNK) parts.push(base64.slice(i, i + CV_CHUNK));
 
-    const { db, doc, writeBatch, serverTimestamp } = fb;
+    const { db, doc, serverTimestamp } = fb;
     const version = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const meta = { name: file.name.slice(0, 120), type: file.type || guessType(file.name), size: file.size };
+    let sent = 0;
     try {
       // partes em lotes; os metadados vão por último para o download nunca ver um arquivo incompleto
       for (let start = 0; start < parts.length; start += CHUNKS_PER_BATCH) {
-        const batch = writeBatch(db);
-        const writeId = addProof(batch, getAdminKey());
-        parts.slice(start, start + CHUNKS_PER_BATCH).forEach((data, k) =>
-          batch.set(doc(db, "files", fileId, "chunks", String(start + k)), { data, version, writeId }));
-        await batch.commit();
-        if (onProgress) onProgress(Math.min(start + CHUNKS_PER_BATCH, parts.length), parts.length);
+        await commitWithRetry((batch) => {
+          const writeId = addProof(batch, getAdminKey());
+          parts.slice(start, start + CHUNKS_PER_BATCH).forEach((data, k) =>
+            batch.set(doc(db, "files", fileId, "chunks", String(start + k)), { data, version, writeId }));
+        });
+        sent = Math.min(start + CHUNKS_PER_BATCH, parts.length);
+        if (onProgress) onProgress(sent, parts.length);
       }
-      const batch = writeBatch(db);
-      const writeId = addProof(batch, getAdminKey());
-      batch.set(doc(db, "files", fileId), { ...meta, chunks: parts.length, version, writeId, updatedAt: serverTimestamp() });
-      await batch.commit();
+      await commitWithRetry((batch) => {
+        const writeId = addProof(batch, getAdminKey());
+        batch.set(doc(db, "files", fileId), { ...meta, chunks: parts.length, version, writeId, updatedAt: serverTimestamp() });
+      });
     } catch (err) {
-      throw new Error(denied(err) ? "Senha expirada. Entre novamente." : "Não foi possível enviar o arquivo.");
+      console.error("Falha no envio do arquivo:", err);
+      const message = await explainUploadError(err);
+      if (sent && fileId !== "cv") cleanupChunks(fileId, version, sent).catch(() => {});
+      throw new Error(message);
     }
     return { id: fileId, ...meta };
   }
@@ -225,53 +283,63 @@
     return "application/octet-stream";
   }
 
-  /* Baixa files/{id}. Retorna false se o arquivo não existir ou estiver incompleto. */
-  async function downloadFileById(fileId) {
+  function base64ToBytes(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  /* Baixa files/{id}. Retorna false se o arquivo não existir ou estiver incompleto.
+     Decodifica parte a parte (economiza memória em celulares) e informa o progresso. */
+  async function downloadFileById(fileId, onProgress) {
     if (mode !== "cloud") return false;
     const { db, doc, getDoc } = fb;
     const metaSnap = await getDoc(doc(db, "files", fileId));
     if (!metaSnap.exists()) return false;
     const info = metaSnap.data();
-    const snaps = await Promise.all(
-      Array.from({ length: info.chunks }, (_, n) => getDoc(doc(db, "files", fileId, "chunks", String(n))))
-    );
-    if (snaps.some((s) => !s.exists() || s.data().version !== info.version)) return false;
-    const binary = atob(snaps.map((s) => s.data().data).join(""));
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([bytes], { type: info.type }));
+    const pieces = new Array(info.chunks);
+    let done = 0;
+    let next = 0;
+    let broken = false;
+    async function worker() {
+      while (next < info.chunks && !broken) {
+        const n = next++;
+        const snap = await getDoc(doc(db, "files", fileId, "chunks", String(n)));
+        if (!snap.exists() || snap.data().version !== info.version) { broken = true; return; }
+        pieces[n] = base64ToBytes(snap.data().data);
+        done++;
+        if (onProgress) onProgress(done, info.chunks);
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(4, info.chunks) }, worker));
+    if (broken) return false;
+    const url = URL.createObjectURL(new Blob(pieces, { type: info.type }));
     const a = document.createElement("a");
     a.href = url;
     a.download = info.name;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
     return true;
   }
 
   /* Exclui files/{id} e suas partes. O comprovante adminWrites/del_{id}_{versão} autoriza a exclusão. */
-  async function deleteFile(fileId) {
+  async function deleteFile(fileId, onProgress) {
     if (mode !== "cloud" || !fileId) return;
-    const { db, doc, getDoc, writeBatch, serverTimestamp } = fb;
+    const { db, doc, getDoc } = fb;
     const snap = await getDoc(doc(db, "files", fileId));
     if (!snap.exists()) return;
     const { version, chunks } = snap.data();
-    // lote 1 cria o comprovante; os seguintes já o encontram. Metadados por último.
-    for (let start = 0; start < chunks || start === 0; start += CHUNKS_PER_BATCH) {
-      const batch = writeBatch(db);
-      if (start === 0) batch.set(doc(db, "adminWrites", "del_" + fileId + "_" + version), { key: Number(getAdminKey()), at: serverTimestamp() });
-      for (let n = start; n < Math.min(start + CHUNKS_PER_BATCH, chunks); n++) batch.delete(doc(db, "files", fileId, "chunks", String(n)));
-      await batch.commit();
-    }
-    const last = writeBatch(db);
-    last.delete(doc(db, "files", fileId));
-    await last.commit();
+    await cleanupChunks(fileId, version, Math.max(chunks, 1), onProgress);
+    await commitWithRetry((batch) => batch.delete(doc(db, "files", fileId)));
   }
 
   async function uploadProjectFile(file, onProgress) {
     if (mode !== "cloud") throw new Error("Sem conexão com o Firebase.");
-    if (file.size > FILE_MAX_BYTES) throw new Error("Arquivo muito grande (máximo 50 MB).");
+    if (file.size > FILE_MAX_BYTES) throw new Error("O arquivo tem " + formatMB(file.size) + " e o máximo é 100 MB.");
+    if (!file.size) throw new Error("O arquivo está vazio.");
     const id = "f_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     return uploadFileTo(id, file, onProgress);
   }
@@ -289,11 +357,11 @@
     return downloadFileById("cv");
   }
 
-  function uniqueId(name) {
+  function uniqueId(name, list) {
     const base = slugify(name);
     let id = base;
     let n = 2;
-    while (projects.some((p) => p.id === id)) id = base + "-" + n++;
+    while (list.some((p) => p.id === id)) id = base + "-" + n++;
     return id;
   }
 
@@ -309,23 +377,28 @@
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
 
     async add(data) {
-      const project = { ...data, id: uniqueId(data.name) };
-      await persist([...projects, project]);
+      let project;
+      await persist((list) => {
+        project = { ...data, id: uniqueId(data.name, list) };
+        return [...list, project];
+      });
       return project;
     },
     async update(id, data) {
-      await persist(projects.map((p) => (p.id === id ? { ...p, ...data, id } : p)));
+      await persist((list) => list.map((p) => (p.id === id ? { ...p, ...data, id } : p)));
     },
     async remove(id) {
-      await persist(projects.filter((p) => p.id !== id));
+      await persist((list) => list.filter((p) => p.id !== id));
     },
     async move(id, dir) {
-      const i = projects.findIndex((p) => p.id === id);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= projects.length) return;
-      const next = clone(projects);
-      [next[i], next[j]] = [next[j], next[i]];
-      await persist(next);
+      await persist((list) => {
+        const i = list.findIndex((p) => p.id === id);
+        const j = i + dir;
+        if (i < 0 || j < 0 || j >= list.length) return list;
+        const next = clone(list);
+        [next[i], next[j]] = [next[j], next[i]];
+        return next;
+      });
     },
     exportJSON() {
       return JSON.stringify(projects, null, 2);

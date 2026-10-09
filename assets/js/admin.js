@@ -124,8 +124,13 @@
           break;
         case "delete":
           if (confirm(`Excluir o projeto "${project.name}"?`)) {
-            await store.remove(id);
-            if (project.file) store.deleteFile(project.file.id).catch(() => {});
+            startBusy("Excluindo " + project.name + "…", true);
+            try {
+              await store.remove(id);
+              if (project.file) await deleteFileWithProgress(project.file, "Excluindo arquivo " + project.file.name + "…").catch(() => {});
+            } finally {
+              endBusy();
+            }
             if (fId.value === id) resetForm();
             toast("Projeto excluído.");
           }
@@ -145,6 +150,59 @@
   /* ---------- Arquivo do projeto ---------- */
   const fFile = $("#fFile"), fFileLabel = $("#fFileLabel"), fFileCurrent = $("#fFileCurrent"), fFileRemove = $("#fFileRemove");
   const FILE_TYPES = /\.(apk|pdf|docx?|zip)$/i;
+
+  /* ---------- Barra de progresso + bloqueio do painel ----------
+   * Enquanto envia ou exclui: barra visível, painel não fecha (X, Esc ou clique fora)
+   * e o navegador pede confirmação se tentar fechar/recarregar a página. */
+  const op = $("#opProgress"), opLabel = $("#opProgressLabel"), opInfo = $("#opProgressInfo"), opFill = $("#opProgressFill");
+  const lockable = [$(".admin"), $("#cvForm")];
+  let busySince = 0;
+
+  function warnUnload(e) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+
+  function startBusy(label, danger) {
+    busySince = Date.now();
+    adminModal.dataset.busy = "1";
+    adminModal.classList.add("is-busy");
+    lockable.forEach((el) => { el.inert = true; });
+    op.hidden = false;
+    op.classList.toggle("is-danger", Boolean(danger));
+    setBusy(label, null);
+    window.addEventListener("beforeunload", warnUnload);
+  }
+
+  /* ratio null = barra animada sem porcentagem */
+  function setBusy(label, ratio, info) {
+    if (label) opLabel.textContent = label;
+    op.classList.toggle("is-indeterminate", ratio == null);
+    opFill.style.width = ratio == null ? "" : Math.round(ratio * 100) + "%";
+    opInfo.textContent = info || (ratio == null ? "" : Math.round(ratio * 100) + "%");
+  }
+
+  function eta(ratio) {
+    if (ratio <= 0 || ratio >= 1) return "";
+    const left = ((Date.now() - busySince) / ratio) * (1 - ratio) / 1000;
+    return " · falta " + (left > 90 ? "~" + Math.ceil(left / 60) + " min" : "~" + Math.max(1, Math.round(left)) + " s");
+  }
+
+  function endBusy() {
+    delete adminModal.dataset.busy;
+    adminModal.classList.remove("is-busy");
+    lockable.forEach((el) => { el.inert = false; });
+    op.hidden = true;
+    window.removeEventListener("beforeunload", warnUnload);
+  }
+
+  // Esc não fecha o painel durante uma operação
+  adminModal.addEventListener("cancel", (e) => { if (adminModal.dataset.busy) e.preventDefault(); });
+
+  async function deleteFileWithProgress(file, label) {
+    setBusy(label, 0);
+    await store.deleteFile(file.id, (done, total) => setBusy(null, done / total));
+  }
   let currentFile = null; // arquivo já salvo no projeto em edição
   let removeFile = false;
 
@@ -226,33 +284,35 @@
     const chosen = fFile.files[0];
     if (chosen && !FILE_TYPES.test(chosen.name)) return showFormError("Arquivo não suportado. Use APK, PDF, Word ou ZIP.");
 
-    const submitHtml = formSubmit.innerHTML;
-    formSubmit.disabled = true;
+    const editing = Boolean(fId.value);
+    startBusy(chosen ? "Enviando " + chosen.name + "…" : "Salvando projeto…");
     try {
       let file = removeFile ? null : currentFile;
       if (chosen) {
-        formSubmit.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando arquivo…';
+        const totalMB = chosen.size / 1048576;
+        const mb = (v) => v.toFixed(1).replace(".", ",");
+        setBusy(null, null, "iniciando envio…");
         file = await store.uploadProjectFile(chosen, (done, total) => {
-          formSubmit.innerHTML = `<i class="bi bi-hourglass-split"></i> Enviando ${Math.round((done / total) * 100)}%`;
+          const ratio = done / total;
+          setBusy(null, ratio, `${mb(totalMB * ratio)} de ${mb(totalMB)} MB · ${Math.round(ratio * 100)}%${eta(ratio)}`);
         });
+        setBusy("Salvando projeto…", null);
       }
       const data = { name, description, link, tags, file };
-      if (fId.value) {
-        await store.update(fId.value, data);
-        toast("Projeto atualizado!");
-      } else {
-        await store.add(data);
-        toast("Projeto adicionado! 🚀");
-      }
+      if (editing) await store.update(fId.value, data);
+      else await store.add(data);
       // apaga do Firebase o arquivo antigo que foi trocado ou removido
-      if (currentFile && (chosen || removeFile)) store.deleteFile(currentFile.id).catch(() => {});
-      resetForm();
+      if (currentFile && (chosen || removeFile)) {
+        op.classList.add("is-danger");
+        await deleteFileWithProgress(currentFile, "Removendo arquivo antigo…").catch(() => {});
+      }
     } catch (err) {
-      handleError(err);
-    } finally {
-      formSubmit.disabled = false;
-      if (formSubmit.innerHTML.includes("Enviando")) formSubmit.innerHTML = submitHtml;
+      endBusy();
+      return handleError(err);
     }
+    endBusy();
+    toast(editing ? "Projeto atualizado!" : "Projeto adicionado! 🚀");
+    resetForm();
   });
 
   /* ---------- Ferramentas ---------- */
@@ -312,18 +372,18 @@
   cvForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     cvSubmit.disabled = true;
-    cvSubmit.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando…';
+    startBusy("Enviando currículo…");
     try {
       await store.uploadCV(cvFile.files[0]);
+      endBusy();
       toast("Currículo atualizado! 📄");
       await renderCV();
     } catch (err) {
+      endBusy();
       cvError.textContent = err.message;
       cvError.hidden = false;
       cvSubmit.disabled = false;
       if (/expirada/i.test(err.message)) handleError(err);
-    } finally {
-      cvSubmit.innerHTML = '<i class="bi bi-cloud-upload"></i> Substituir currículo';
     }
   });
 

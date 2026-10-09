@@ -131,6 +131,7 @@
   /* ---------- Modais: fechar por botão ou clique fora ---------- */
   $$("dialog.modal").forEach((dialog) => {
     dialog.addEventListener("click", (e) => {
+      if (dialog.dataset.busy) return; // operação em andamento: só fecha quando concluir
       if (e.target === dialog || e.target.closest("[data-close]")) dialog.close();
     });
   });
@@ -254,13 +255,11 @@
   });
 
   /* ---------- Downloads (somente APKs) ---------- */
-  const downloadsSection = $("#downloads");
   const downloadsGrid = $("#downloadsGrid");
 
   function renderDownloads(projects) {
     const apps = projects.filter((p) => store.isApk(p.file));
-    downloadsSection.hidden = apps.length === 0;
-    $("#navDownloads").hidden = apps.length === 0;
+    $("#downloadsEmpty").hidden = apps.length > 0;
     downloadsGrid.innerHTML = apps.map((p) => `
       <article class="download-card" data-id="${escapeHtml(p.id)}">
         <span class="download-card__icon"><i class="bi bi-android2"></i></span>

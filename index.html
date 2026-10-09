@@ -30,7 +30,7 @@
         <a href="#sobre">Sobre</a>
         <a href="#experiencia">Experiência</a>
         <a href="#projetos">Projetos</a>
-        <a href="#downloads" id="navDownloads" hidden>Downloads</a>
+        <a href="#downloads">Downloads</a>
         <a href="#contato">Contato</a>
         <a class="btn btn--sm btn--ghost nav__cv" href="assets/docs/Curriculo_Guilherme_Chagas.docx" download data-cv>
           <i class="bi bi-download"></i> Currículo
@@ -260,7 +260,7 @@
     </section>
 
     <!-- ============ DOWNLOADS ============ -->
-    <section class="section" id="downloads" hidden>
+    <section class="section" id="downloads">
       <div class="container">
         <div class="section__head reveal">
           <span class="eyebrow mono">// 05. downloads</span>
@@ -268,6 +268,7 @@
           <p class="muted">Baixe o APK e instale no seu celular. Se o Android pedir, permita a instalação de fontes desconhecidas.</p>
         </div>
         <div class="downloads-grid" id="downloadsGrid"></div>
+        <p class="empty muted" id="downloadsEmpty" hidden><i class="bi bi-android2"></i> Nenhum app disponível para download no momento.</p>
       </div>
     </section>
 
@@ -340,6 +341,15 @@
       <h3 id="adminTitle"><i class="bi bi-grid-1x2"></i> Gerenciar projetos</h3>
       <p class="storage-status" id="storageStatus"></p>
 
+      <div class="op-progress" id="opProgress" role="status" aria-live="polite" hidden>
+        <div class="op-progress__head">
+          <strong id="opProgressLabel">Enviando…</strong>
+          <span id="opProgressInfo"></span>
+        </div>
+        <div class="op-progress__track"><span class="op-progress__fill" id="opProgressFill"></span></div>
+        <p class="op-progress__note"><i class="bi bi-lock"></i> Aguarde terminar: o painel só fecha quando a operação for concluída.</p>
+      </div>
+
       <div class="admin">
         <form class="admin__form card" id="projectForm" novalidate>
           <h4 id="formTitle">Novo projeto</h4>
@@ -361,11 +371,11 @@
             <input type="text" id="fTags" placeholder="React, TypeScript">
           </label>
           <div class="field">
-            <span>Arquivo para download <em class="muted">(opcional — APK, PDF, Word ou ZIP, até 50 MB)</em></span>
+            <span>Arquivo para download <em class="muted">(opcional — APK, PDF, Word ou ZIP, até 100 MB)</em></span>
             <div class="file-field">
               <label class="btn btn--sm btn--ghost file-field__pick">
                 <i class="bi bi-paperclip"></i> <span id="fFileLabel">Escolher arquivo</span>
-                <input type="file" id="fFile" accept=".apk,.pdf,.doc,.docx,.zip,application/vnd.android.package-archive,application/pdf,application/zip" hidden>
+                <input type="file" id="fFile" hidden>
               </label>
               <span class="file-field__current muted small" id="fFileCurrent" hidden></span>
               <button type="button" class="icon-btn icon-btn--danger" id="fFileRemove" aria-label="Remover arquivo" hidden><i class="bi bi-x-lg"></i></button>

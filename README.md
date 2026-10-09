@@ -42,9 +42,11 @@ que exige plano pago. Se nenhum for enviado, o site usa `assets/docs/Curriculo_G
 
 ## Arquivos dos projetos (APK, PDF...)
 
-No formulário do projeto dá para anexar um arquivo de até 50 MB (APK, PDF, Word ou ZIP).
+No formulário do projeto dá para anexar um arquivo de até 100 MB (APK, PDF, Word ou ZIP).
+O envio mostra uma barra de progresso (MB enviados e tempo restante) e o painel só fecha quando terminar.
+A velocidade depende da internet de quem envia: ~20 MB levam de 2 a 3 minutos numa conexão de upload comum.
 O visitante vê "Baixar APK"/"Baixar arquivo" no card e nos detalhes do projeto.
-Projetos com APK aparecem também na seção **Downloads** (que só é exibida quando existe algum APK).
+Projetos com APK aparecem também na seção **Downloads** do menu (com um aviso quando não há nenhum).
 Os arquivos ficam no Firestore (`files/{id}`), divididos em partes. No plano gratuito cabe 1 GB no total,
 e cada download de um APK de 40 MB gasta ~60 leituras (o limite grátis é 50 mil leituras por dia).
 
