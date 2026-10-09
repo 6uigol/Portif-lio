@@ -343,8 +343,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .project-card__open {
   display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; flex: none;
   border: 1px solid var(--border); color: var(--text); transition: .2s;
+  background: transparent; font-size: 1rem; padding: 0; cursor: pointer; /* <button> herda fundo branco do navegador */
 }
 .project-card__open:hover { background: var(--text); color: var(--bg); transform: rotate(-8deg); }
+.project-card__open[data-download] { color: var(--success); border-color: rgba(52, 211, 153, .35); }
+.project-card__open[data-download]:hover { background: var(--success); color: var(--bg); }
+.project-card__open:disabled { opacity: .6; cursor: progress; transform: none; }
 .project-card__private { font-size: .78rem; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
 .project-card .visited { position: absolute; top: 12px; right: 60px; font-size: .72rem; color: var(--success); font-family: var(--font-mono); }
 .empty { text-align: center; padding: 40px 0; }

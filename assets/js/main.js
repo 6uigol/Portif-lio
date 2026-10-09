@@ -152,7 +152,13 @@
   async function downloadProjectFile(project, button) {
     if (!project.file) return;
     const html = button ? button.innerHTML : "";
-    if (button) { button.disabled = true; button.innerHTML = '<i class="bi bi-hourglass-split"></i> Baixando…'; }
+    if (button) {
+      button.disabled = true;
+      // botão só de ícone (card) mostra só a ampulheta; os demais mostram o texto
+      button.innerHTML = button.classList.contains("project-card__open")
+        ? '<i class="bi bi-hourglass-split"></i>'
+        : '<i class="bi bi-hourglass-split"></i> Baixando…';
+    }
     try {
       if (!(await store.downloadFileById(project.file.id))) toast("Arquivo indisponível no momento.");
     } catch (e) {

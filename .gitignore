@@ -1,0 +1,9 @@
+# Configuração local do editor/agente
+.claude/
+
+# NUNCA subir chaves de conta de serviço do Firebase
+*adminsdk*.json
+*service-account*.json
+
+node_modules/
+.vercel/
