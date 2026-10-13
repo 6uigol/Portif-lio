@@ -251,12 +251,16 @@
   });
 
   grid.addEventListener("click", (e) => {
-    const action = e.target.closest("[data-open], [data-download]");
-    if (!action) return;
-    const id = e.target.closest("[data-id]").dataset.id;
-    const project = store.get().find((p) => p.id === id);
+    const card = e.target.closest("[data-id]");
+    if (!card) return;
+    // links externos seguem o comportamento padrão
+    if (e.target.closest("a")) return;
+    // não abre o modal se o usuário estiver só selecionando texto
+    if (!e.target.closest("button") && String(window.getSelection())) return;
+    const project = store.get().find((p) => p.id === card.dataset.id);
     if (!project) return;
-    if (action.hasAttribute("data-download")) downloadProjectFile(project, action);
+    const download = e.target.closest("[data-download]");
+    if (download) downloadProjectFile(project, download);
     else openProject(project);
   });
 

@@ -325,6 +325,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   transition: transform .3s, border-color .3s, background .3s; animation: cardIn .45s both;
 }
+.project-card { cursor: pointer; }
 .project-card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--c, var(--accent)) 60%, transparent); background: var(--surface-2); }
 @keyframes cardIn { from { opacity: 0; transform: translateY(14px); } }
 .project-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
